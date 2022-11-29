@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import styled from '@emotion/styled'
 import CryptoImage from './img/imagen-criptos.png'
 import Form from './components/Form'
+import Result from './components/Result'
+import Spinner from './components/Spinner'
 
 
 const Container = styled.div`
@@ -41,6 +43,29 @@ const Heading = styled.h1`
 `
 
 function App() {
+  const [ currencies, setCurrencies ] = useState({});
+  const [ quotation, setQuotation ] = useState({});
+  const [ loading, setLoading ] = useState(false);
+  
+  useEffect(() => {
+    if(Object.keys(currencies).length){
+      const quoteCrypto = async() => {
+        setLoading(true);
+        setQuotation({})
+        const { currency, cryptoCurrency } = currencies;
+        const url = (`https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${cryptoCurrency}&tsyms=${currency}`);
+
+        const response = await fetch(url);
+        const result = await response.json();
+
+        setQuotation(result.DISPLAY[cryptoCurrency][currency]);
+        setLoading(false);
+      }
+
+      quoteCrypto()
+    }
+  }, [currencies]);
+
 
   return (
     <Container>
@@ -50,7 +75,11 @@ function App() {
       />
       <div>
         <Heading>Quote Cryptocurrencies Instantly</Heading>
-        <Form/>
+        <Form
+          setCurrencies={setCurrencies}
+        />
+        {loading && <Spinner/>}
+        {quotation.PRICE && <Result quotation={quotation}/>}
       </div>
     </Container>
   )
